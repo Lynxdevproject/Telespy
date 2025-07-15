@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-from telegram import ChatMemberUpdated
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -9,6 +8,7 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
+from telegram import ChatMemberUpdated
 
 # 📦 Import handler dari folder handlers/
 from handlers import start, spy_handler, history
@@ -19,10 +19,11 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # 🕵️ Handler: bot keluar kalau ditambahkan tapi bukan admin
 async def member_check(update: ChatMemberUpdated, context: ContextTypes.DEFAULT_TYPE):
-    chat = update.chat
-    bot_member = await chat.get_member(context.bot.id)
+    member_update = update.my_chat_member
+    chat = member_update.chat
+    status = member_update.new_chat_member.status
 
-    if bot_member.status != ChatMemberUpdated.ADMINISTRATOR:
+    if status != "administrator":
         await context.bot.send_message(
             chat_id=chat.id,
             text="🚫 Bot tidak ditugaskan sebagai admin.\nSelamat tinggal 👋"
@@ -48,6 +49,11 @@ def main():
 
     # ✅ Handler auto-keluar jika bukan admin (pakai my_chat_member)
     app.add_handler(ChatMemberHandler(member_check, chat_member_types=["my_chat_member"]))
+
+    # 🛠️ Optional: Tambahkan error handler biar gak buang stacktrace ke log
+    async def error_handler(update, context):
+        print(f"[ERROR] {context.error}")
+    app.add_error_handler(error_handler)
 
     print("🕶️ Telespy aktif dan menyelidiki grup...")
     app.run_polling()
