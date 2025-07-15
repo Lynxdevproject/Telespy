@@ -10,14 +10,14 @@ from telegram.ext import (
     filters
 )
 
-# 🔧 Import handler dari folder
+# 📦 Import handler dari folder handlers/
 from handlers import start, spy_handler
 
-# 🔐 Load Token dari .env
+# 🔐 Load .env
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 🕵️ Logic: Keluar grup kalau bukan admin
+# 🕵️ Handler auto-keluar jika bukan admin
 async def member_check(update: ChatMember, context: ContextTypes.DEFAULT_TYPE):
     chat = update.chat
     bot_member = await chat.get_member(context.bot.id)
@@ -33,13 +33,13 @@ async def member_check(update: ChatMember, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # 🔹 Handler /start (briefing user)
+    # 🧠 Handler /start untuk briefing user
     app.add_handler(CommandHandler("start", start))
 
-    # 🔹 Handler deteksi perubahan nama/username
+    # 🕶️ Handler mata-mata yang mendeteksi perubahan username/nama
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, spy_handler))
 
-    # 🔹 Handler auto-keluar grup kalau bukan admin
+    # 💣 Handler auto-keluar dari grup jika bukan admin
     app.add_handler(ChatMemberHandler(member_check, chat_member_types=["member"]))
 
     print("🕶️ Telespy aktif dan sedang menyelidiki...")
