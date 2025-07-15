@@ -15,17 +15,46 @@ async def spy_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if previous:
         if previous["username"] != username:
-            changes.append(f"🔁 Username berubah: @{previous['username']} → @{username}")
+            changes.append({
+                "type": "username",
+                "old": previous["username"],
+                "new": username
+            })
         if previous["first_name"] != first_name:
-            changes.append(f"🔁 Nama berubah: {previous['first_name']} → {first_name}")
+            changes.append({
+                "type": "name",
+                "old": previous["first_name"],
+                "new": first_name
+            })
     else:
-        changes.append(f"📍 User baru terdeteksi: @{username} ({first_name})")
+        changes.append({
+            "type": "new_user",
+            "username": username,
+            "name": first_name
+        })
 
     # 📝 Update cache
     user_cache[user_id] = {"username": username, "first_name": first_name}
 
     if changes:
-        await update.message.reply_text(
-            "🕵️ *Telespy Report:*\n" + "\n".join(changes),
-            parse_mode="Markdown"
-        )
+        report = "📋 *Laporan Perubahan Identitas:*\n"
+
+        for change in changes:
+            if change["type"] == "username":
+                report += (
+                    "\n👤 *Username Sebelumnya* : @" + change["old"] +
+                    "\n🎯 *Username Sekarang*   : @" + change["new"]
+                )
+            elif change["type"] == "name":
+                report += (
+                    "\n📝 *Nama Sebelumnya*     : " + change["old"] +
+                    "\n🆕 *Nama Sekarang*       : " + change["new"]
+                )
+            elif change["type"] == "new_user":
+                report += (
+                    f"\n📍 *User Baru Terdeteksi:*\n"
+                    f"👤 Username : @{change['username']}\n"
+                    f"📝 Nama     : {change['name']}"
+                )
+
+        await update.message.reply_text(report, parse_mode="Markdown")
